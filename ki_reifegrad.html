@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>meHRblick</title>
+  <style>
+/* ===== TOKENS ===== */
+:root {
+  --purple:    #32174D;
+  --green:     #BAD0B2;
+  --blue:      #005B8C;
+  --yellow:    #FACB41;
+  --lavender:  #A49BB3;
+  --mint:      #DECFE1; /* corrected from DECEI */
+  --skyblue:   #B7CDE0; /* corrected from B7CDEO */
+  --cream:     #FDE6A2;
+  --lilac:     #DCD9E3;
+  --mintlight: #EAF6F1;
+  --bluelight: #EAF2F8;
+  --creamlight:#FFF7DE;
+  --white:     #ffffff;
+
+  /* dimension colors from palette */
+  --d0: #32174D;
+  --d1: #005B8C;
+  --d2: #BAD0B2;
+  --d3: #FACB41;
+  --d4: #A49BB3;
+  --d5: #B7CDE0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--white); color: var(--purple); }
+
+.wrap { padding: 1.5rem; max-width: 960px; margin: 0 auto; }
+
+/* HEADER */
+.header-bar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 8px; }
+.app-title { font-size: 16px; font-weight: 700; color: var(--purple); }
+.subtitle { font-size: 12.5px; color: var(--blue); margin-top: 3px; }
+.header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.lang-toggle { display: flex; border: 1px solid var(--lavender); border-radius: 6px; overflow: hidden; }
+.lang-btn { font-size: 12px; padding: 4px 10px; border: none; background: transparent; cursor: pointer; color: var(--purple); transition: background 0.15s; }
+.lang-btn.active { background: var(--purple); color: var(--white); }
+
+.reset-btn { font-size: 12px; padding: 5px 12px; border: 1px solid var(--lavender); border-radius: 6px; background: transparent; cursor: pointer; color: var(--purple); }
+.reset-btn:hover { background: var(--lilac); }
+
+/* CHART */
+.chart-area { position: relative; width: 100%; max-width: 540px; margin: 0 auto; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--blue); margin-top: 0.5rem; justify-content: center; }
+.legend span { display: flex; align-items: center; gap: 5px; }
+
+/* SLIDERS */
+.sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 28px; margin-top: 1.5rem; }
+.slider-row { display: flex; flex-direction: column; gap: 3px; }
+.slider-label { display: flex; justify-content: space-between; font-size: 13px; }
+.slider-name { font-weight: 500; color: var(--purple); }
+.slider-val { color: var(--blue); min-width: 20px; text-align: right; font-weight: 600; }
+.dim-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+.standard-label { font-size: 11px; color: var(--lavender); margin-top: 2px; }
+
+/* DIMENSION ACCORDION */
+.dims-section { margin-top: 2rem; border-top: 1px solid var(--lilac); padding-top: 1rem; }
+.dims-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--purple); }
+.dim-block { border: 1px solid var(--lilac); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+.dim-header-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--creamlight); border: none; cursor: pointer; text-align: left; }
+.dim-header-btn:hover { background: var(--bluelight); }
+.dim-header-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--purple); }
+.dim-color-bar { width: 4px; height: 18px; border-radius: 2px; }
+.dim-chevron { font-size: 11px; color: var(--lavender); transition: transform 0.2s; }
+.dim-chevron.open { transform: rotate(180deg); }
+.dim-body { display: none; padding: 0 14px 14px; background: var(--white); }
+.dim-body.open { display: block; }
+
+/* CHATBOT LAUNCH BUTTON */
+.chat-launch-btn { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 5px 12px; border-radius: 20px; border: none; cursor: pointer; font-weight: 500; transition: opacity 0.15s; margin-left: auto; }
+.chat-launch-btn:hover { opacity: 0.85; }
+
+/* SUB ITEMS */
+.sub-item { margin-top: 14px; border: 1px solid var(--lilac); border-radius: 8px; padding: 10px 12px; }
+.sub-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+.sub-name { font-size: 12.5px; font-weight: 600; color: var(--purple); }
+.sub-desc { font-size: 11px; color: var(--blue); margin-bottom: 6px; }
+.sub-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sub-score-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+.sub-flag-btn { font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--lilac); background: var(--white); color: var(--purple); cursor: pointer; }
+.sub-flag-btn:hover { background: var(--creamlight); }
+.sub-flag-btn.active { background: var(--cream); border-color: var(--yellow); color: var(--purple); }
+.sub-slider-row { display: flex; align-items: center; gap: 10px; }
+.sub-slider { flex: 1; height: 4px; }
+.sub-val { font-size: 12px; color: var(--blue); min-width: 16px; text-align: right; font-weight: 600; }
+.level-table { margin-top: 8px; border-radius: 6px; overflow: hidden; border: 1px solid var(--lilac); width: 100%; }
+.level-row { display: flex; border-bottom: 1px solid var(--lilac); }
+.level-row:last-child { border-bottom: none; }
+.level-num { width: 28px; min-width: 28px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; padding: 6px 0; }
+.level-text { font-size: 11.5px; color: #444; padding: 6px 10px; line-height: 1.45; flex: 1; }
+.level-row.active-row .level-text { font-weight: 500; }
+
+/* CHATBOT MODAL */
+.chat-overlay { position: fixed; inset: 0; background: rgba(50,23,77,0.35); z-index: 100; display: none; align-items: flex-end; justify-content: flex-end; padding: 20px; }
+.chat-overlay.open { display: flex; }
+.chat-panel { width: 400px; max-width: 95vw; height: 600px; max-height: 85vh; background: var(--white); border-radius: 16px; box-shadow: 0 8px 40px rgba(50,23,77,0.2); display: flex; flex-direction: column; overflow: hidden; }
+.chat-header { background: var(--purple); color: var(--white); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.chat-header-left { display: flex; align-items: center; gap: 10px; }
+.chat-dim-icon { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.chat-title { font-size: 13px; font-weight: 600; }
+.chat-subtitle { font-size: 11px; opacity: 0.7; margin-top: 1px; }
+.chat-close-btn { background: none; border: none; color: var(--white); cursor: pointer; font-size: 18px; opacity: 0.7; padding: 0 4px; }
+.chat-close-btn:hover { opacity: 1; }
+
+.chat-progress { background: rgba(255,255,255,0.12); padding: 8px 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.progress-label { font-size: 11px; color: rgba(255,255,255,0.75); flex-shrink: 0; }
+.progress-dots { display: flex; gap: 4px; flex-wrap: wrap; }
+.progress-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(50,23,77,0.18); background: #e6e6e6; transition: all 0.2s; cursor: pointer; }
+.progress-dot.done { background: var(--green); border-color: var(--green); }
+.progress-dot.active { background: var(--yellow); border-color: var(--yellow); }
+.progress-dot.flagged { background: var(--cream); border-color: var(--cream); }
+
+.chat-messages { flex: 1; overflow-y: auto; padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 10px; }
+.msg { max-width: 88%; line-height: 1.5; }
+.msg.bot { align-self: flex-start; }
+.msg.user { align-self: flex-end; }
+.msg-bubble { padding: 9px 13px; border-radius: 12px; font-size: 12.5px; }
+.msg.bot .msg-bubble { background: var(--mintlight); color: var(--purple); border-bottom-left-radius: 4px; }
+.msg.user .msg-bubble { background: var(--purple); color: var(--white); border-bottom-right-radius: 4px; }
+.msg-time { font-size: 10px; color: var(--lavender); margin-top: 3px; padding: 0 4px; }
+.msg.user .msg-time { text-align: right; }
+
+.typing-indicator { align-self: flex-start; }
+.typing-indicator .msg-bubble { background: var(--mintlight); padding: 10px 14px; }
+.typing-dots { display: flex; gap: 4px; }
+.typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--lavender); animation: bounce 1.2s infinite; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100%{ transform:translateY(0); } 30%{ transform:translateY(-5px); } }
+
+/* CONFIRM BUTTONS */
+.confirm-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.confirm-btn { font-size: 11.5px; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--lavender); background: var(--white); color: var(--purple); cursor: pointer; font-weight: 500; transition: all 0.15s; }
+.confirm-btn:hover { background: var(--purple); color: var(--white); border-color: var(--purple); }
+.confirm-btn.primary { background: var(--purple); color: var(--white); border-color: var(--purple); }
+.confirm-btn.primary:hover { opacity: 0.85; }
+.confirm-btn.danger { border-color: var(--blue); color: var(--blue); }
+.confirm-btn.danger:hover { background: var(--blue); color: var(--white); }
+
+/* MANUAL SCORE SELECTOR */
+.manual-score-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.score-chip { font-size: 11px; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--lavender); background: var(--white); cursor: pointer; font-weight: 600; color: var(--purple); }
+.score-chip:hover { background: var(--purple); color: var(--white); }
+
+.chat-input-area { padding: 10px 12px; border-top: 1px solid var(--lilac); display: flex; gap: 8px; flex-shrink: 0; background: var(--creamlight); }
+.chat-input { flex: 1; border: 1px solid var(--lavender); border-radius: 8px; padding: 8px 11px; font-size: 12.5px; outline: none; resize: none; height: 38px; max-height: 90px; font-family: inherit; color: var(--purple); background: var(--white); }
+.chat-input:focus { border-color: var(--blue); }
+.chat-send-btn { background: var(--purple); color: var(--white); border: none; border-radius: 8px; padding: 0 14px; cursor: pointer; font-size: 16px; flex-shrink: 0; }
+.chat-send-btn:hover { background: var(--blue); }
+.chat-send-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* API KEY NOTICE */
+.api-key-notice { background: var(--creamlight); border: 1px solid var(--yellow); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--purple); margin: 8px 0; }
+.api-key-notice strong { color: var(--blue); }
+
+/* FOOTER LOGO */
+.footer-logo { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--lilac); display: flex; justify-content: center; }
+.footer-logo img, .footer-logo svg { max-width: 340px; width: 100%; height: auto; }
+
+/* DIMENSION SCORE SUMMARY */
+.dim-score-summary { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--mintlight); border-radius: 8px; margin-top: 12px; font-size: 12px; color: var(--purple); }
+.dim-score-num { font-size: 20px; font-weight: 700; color: var(--blue); }
+.dim-score-label { font-size: 11px; color: var(--lavender); }
+
+@media (max-width: 600px) {
+  .sliders { grid-template-columns: 1fr; }
+  .chat-panel { width: 100%; height: 70vh; }
+  .chat-overlay { padding: 0; align-items: flex-end; }
+}
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header-bar">
+    <div>
+      <p class="app-title" data-i18n="appTitle">meHRblick by meHRsalz</p>
+      <p class="subtitle" data-i18n="appSubtitle">KI-Reifegradmodell</p>
+    </div>
+    <div class="header-controls">
+      <div class="lang-toggle">
+        <button class="lang-btn active" onclick="setLang('de')">DE</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+      </div>
+      <button class="reset-btn" onclick="resetAll()" data-i18n="reset">Zurücksetzen</button>
+    </div>
+  </div>
+
+  <div class="chart-area">
+    <canvas id="radar" role="img" aria-label="Radar-Chart mit 6 KI-Reifegraddimensionen"></canvas>
+  </div>
+  <div class="legend">
+    <span><span style="width:12px;height:3px;background:var(--blue);display:inline-block;border-radius:2px;"></span><span data-i18n="legend_ist">Ist-Stand</span></span>
+    <span><span style="width:12px;height:3px;background:var(--lavender);display:inline-block;border-radius:2px;border-style:dashed;"></span><span data-i18n="legend_standard">Industriestandard</span></span>
+  </div>
+
+  <div class="sliders" id="slider-area"></div>
+
+  <div class="dims-section">
+    <p class="dims-title" data-i18n="detailTitle">Detailbewertung nach Unterdimension</p>
+    <div id="dim-blocks"></div>
+  </div>
+
+  <div class="footer-logo">
+    <img src="logo_startseite.svg" alt="Logo" onerror="this.style.display='none'">
+  </div>
+</div>
+
+<!-- CHATBOT OVERLAY -->
+<div class="chat-overlay" id="chatOverlay" onclick="handleOverlayClick(event)">
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="chat-dim-icon" id="chatDimIcon"></div>
+        <div>
+          <div class="chat-title" id="chatTitle">Dimension-Spezialist</div>
+          <div class="chat-subtitle" id="chatSubtitle">Bewertet Ihre Antworten</div>
+        </div>
+      </div>
+      <button class="chat-close-btn" onclick="closeChat()">✕</button>
+    </div>
+    <div class="chat-progress" id="chatProgress">
+      <span class="progress-label" data-i18n="progress">Fortschritt:</span>
+      <div class="progress-dots" id="progressDots"></div>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="chatInput" rows="1" placeholder="Nachricht eingeben..." data-i18n-placeholder="inputPlaceholder" onkeydown="handleInputKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">↑</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+/* ============================================================
+   CONFIGURATION
+   API_PROVIDER options: 'auto', 'openai', 'gemini'
+   ============================================================ */
+const API_KEY = '';
+const API_PROVIDER = 'gemini';
+
+/* ============================================================
+   TRANSLATIONS
+   ============================================================ */
+const i18n = {
+  de: {
+    appTitle: 'meHRblick',
+    appSubtitle: '6 Dimensionen · Skala 0–5 · Gesamtreifegrad entsteht aus dem Profil',
+    reset: 'Zurücksetzen',
+    legend_ist: 'Ist-Stand',
+    legend_standard: 'Industriestandard',
+    detailTitle: 'Detailbewertung nach Unterdimension',
+    progress: 'Fortschritt:',
+    inputPlaceholder: 'Nachricht eingeben...',
+    chatLaunch: 'Mit KI bewerten',
+    industryStandard: 'Industriestandard',
+    level: 'Level',
+    noData: 'Keine Daten',
+    insufficientData: 'Nicht genügend Daten',
+    markInsufficient: 'Nicht genügend Daten',
+    dimScore: 'Dimensionswert',
+    confirmYes: 'Ja, bestätigen',
+    confirmNo: 'Nein, ich widerspreche',
+    confirmNoData: 'Keine Daten vorhanden',
+    manualSet: 'Score manuell setzen',
+    specialist: 'Spezialist',
+    subOf: 'von',
+    done: 'Fertig',
+    nextSub: 'Nächste Unterdimension',
+    chatDoneTitle: 'Bewertung abgeschlossen',
+    chatDoneBody: 'Alle Unterdimensionen wurden bewertet. Öffnen Sie die nächste Dimension, um dort fortzufahren.',
+  },
+  en: {
+    appTitle: 'AI Maturity Spider Model',
+    appSubtitle: '6 Dimensions · Scale 0–5 · Overall maturity emerges from the profile',
+    reset: 'Reset',
+    legend_ist: 'Current state',
+    legend_standard: 'Industry standard',
+    detailTitle: 'Detail assessment by sub-dimension',
+    progress: 'Progress:',
+    inputPlaceholder: 'Type a message...',
+    chatLaunch: 'Assess with AI',
+    industryStandard: 'Industry standard',
+    level: 'Level',
+    noData: 'No data',
+    insufficientData: 'Insufficient data',
+    markInsufficient: 'Insufficient data',
+    dimScore: 'Dimension score',
+    confirmYes: 'Yes, confirm',
+    confirmNo: 'No, I disagree',
+    confirmNoData: 'No data available',
+    manualSet: 'Set score manually',
+    specialist: 'Specialist',
+    subOf: 'of',
+    done: 'Done',
+    nextSub: 'Next sub-dimension',
+    chatDoneTitle: 'Assessment complete',
+    chatDoneBody: 'All sub-dimensions have been assessed. Open the next dimension to continue there.',
+  }
+};
+let lang = 'de';
+function t(key) { return i18n[lang][key] || key; }
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent === l.toUpperCase()));
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    if (i18n[l][k]) el.textContent = i18n[l][k];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const k = el.getAttribute('data-i18n-placeholder');
+    if (i18n[l][k]) el.placeholder = i18n[l][k];
+  });
+  document.querySelectorAll('[data-i18n-chatlaunch]').forEach(el => el.textContent = t('chatLaunch'));
+  document.querySelectorAll('[data-i18n-standard]').forEach(el => el.textContent = t('industryStandard'));
+  document.querySelectorAll('[data-i18n-insufficientbtn]').forEach(el => el.textContent = t('markInsufficient'));
+  document.documentElement.lang = l;
+}
+
+/* ============================================================
+   DIMENSION DATA
+   ============================================================ */
+const dims = [
+  {
+    id: 'people', color: '#32174D',
+    name: { de: 'Mitarbeiter & Kultur', en: 'People & Culture' },
+    desc: { de: 'Wissen, Haltung und gelebte KI-Nutzung auf allen Ebenen', en: 'Knowledge, attitude and lived AI use at all levels' },
+    subs: [
+      { name: { de: 'Bedarfsbewusstsein', en: 'Need awareness' },
+        desc: { de: 'Erkennen ob und wo KI im eigenen Arbeitsalltag Mehrwert schafft', en: 'Recognising whether and where AI creates value in daily work' },
+        levels: {
+          de: ['KI ist kein Thema. Mitarbeiter haben keine Vorstellung was KI für ihre Arbeit bedeuten könnte.',
+               'Einzelne Mitarbeiter kennen KI aus den Medien, sehen aber keinen konkreten Bezug zur eigenen Arbeit.',
+               'Ein Teil der Belegschaft erkennt punktuell Einsatzmöglichkeiten, meist in offensichtlichen Bereichen.',
+               'Die meisten Mitarbeiter können konkrete Anwendungsfälle in ihrem Bereich benennen und diskutieren.',
+               'Bereichsübergreifend existiert ein strukturiertes Verständnis wo KI den größten Hebel hat.',
+               'Alle Ebenen identifizieren aktiv neue KI-Potenziale und bringen diese proaktiv in strategische Diskussionen ein.'],
+          en: ['AI is not a topic. Employees have no idea what AI could mean for their work.',
+               'Individual employees know AI from media but see no concrete link to their own work.',
+               'Part of the workforce recognises occasional use cases, usually in obvious areas.',
+               'Most employees can name and discuss concrete use cases in their area.',
+               'A cross-functional structured understanding of where AI has the greatest leverage exists.',
+               'All levels actively identify new AI potentials and proactively bring them into strategic discussions.']
+        }
+      },
+      { name: { de: 'Nutzungsbereitschaft', en: 'Readiness to adopt' },
+        desc: { de: 'Haltung, Offenheit und Motivation der Belegschaft, KI im Arbeitsalltag anzunehmen', en: 'Attitude, openness and motivation of the workforce to adopt AI in daily work' },
+        levels: {
+          de: ['Aktive Ablehnung oder Angst. KI wird als Bedrohung wahrgenommen.',
+               'Passives Abwarten. Mitarbeiter sind skeptisch oder sehen KI nicht als Teil ihrer Arbeit.',
+               'Grundsätzliche Offenheit ist vorhanden, aber nur bei klarer Aufforderung und Unterstützung.',
+               'Viele Mitarbeiter zeigen Neugier und Bereitschaft, KI im eigenen Arbeitskontext auszuprobieren.',
+               'KI wird kulturell positiv gesehen. Experimente sind erwünscht und Mitarbeiter bringen eigene Ideen ein.',
+               'KI-Adoption ist selbstverständlich. Mitarbeiter treiben neue KI-Möglichkeiten aktiv ein und fordern bessere Rahmenbedingungen.'],
+          en: ['Active rejection or fear. AI is perceived as a threat.',
+               'Passive waiting. Employees are sceptical or do not see AI as part of their work.',
+               'General openness exists, but only with clear encouragement and support.',
+               'Many employees show curiosity and willingness to try AI in their own work context.',
+               'AI is viewed positively in the culture. Experiments are welcome and employees contribute ideas.',
+               'AI adoption is natural. Employees actively drive new AI opportunities and ask for better conditions.']
+        }
+      },
+      { name: { de: 'Nutzungsfrequenz', en: 'Usage frequency' },
+        desc: { de: 'Wie regelmäßig und wie breit KI-Tools im Arbeitsalltag tatsächlich genutzt werden', en: 'How regularly and how broadly AI tools are actually used in daily work' },
+        levels: {
+          de: ['Keine KI-Nutzung im Arbeitsalltag.',
+               'Sporadische Nutzung einzelner Personen, meist unregelmäßig und ohne Teamroutine.',
+               'Regelmäßige Nutzung in einzelnen Teams oder Rollen, aber noch nicht bereichsübergreifend.',
+               'KI wird in mehreren Bereichen wiederkehrend für typische Aufgaben genutzt.',
+               'Häufige Nutzung über Bereiche hinweg; KI ist in mehreren Arbeitsabläufen etabliert.',
+               'KI-Nutzung ist tägliche Praxis auf allen Ebenen und in vielen Standardprozessen verankert.'],
+          en: ['No AI use in daily work.',
+               'Sporadic use by individual people, mostly irregular and without team routines.',
+               'Regular use in selected teams or roles, but not yet across functions.',
+               'AI is used repeatedly in several areas for typical tasks.',
+               'Frequent use across areas; AI is established in several workflows.',
+               'AI use is daily practice at all levels and embedded in many standard processes.']
+        }
+      },
+      { name: { de: 'Führungskompetenz KI', en: 'Leadership AI competence' },
+        desc: { de: 'Tiefes KI-Verständnis bei Führungskräften als Voraussetzung für glaubwürdige Entscheidungen', en: 'Deep AI understanding among leaders as a prerequisite for credible decisions' },
+        levels: {
+          de: ['Führungskräfte haben kein KI-Verständnis und kein Interesse.',
+               'Oberflächliches Buzzword-Wissen, keine strategische Einschätzungsfähigkeit.',
+               'Grundverständnis der Möglichkeiten und Grenzen von KI, erste eigene Nutzungserfahrung.',
+               'Führungskräfte können KI-Potenziale für ihren Bereich einschätzen und Entscheidungen treffen.',
+               'Führungsebene nutzt KI aktiv als Vorbildfunktion und integriert KI in Führungsentscheidungen.',
+               'Alle Führungskräfte sind KI-kompetente Enabler die KI-Transformation aktiv vorantreiben.'],
+          en: ['Leaders have no AI understanding and no interest.',
+               'Superficial buzzword knowledge, no strategic assessment ability.',
+               'Basic understanding of AI capabilities and limits, first personal usage experience.',
+               'Leaders can assess AI potential for their area and make decisions.',
+               'Leadership uses AI actively as a role model and integrates AI into leadership decisions.',
+               'All leaders are AI-competent enablers who actively drive AI transformation.']
+        }
+      }
+    ]
+  },
+  {
+    id: 'strategy', color: '#005B8C',
+    name: { de: 'Strategie & Vision', en: 'Strategy & Vision' },
+    desc: { de: 'Verknüpfung von KI mit Unternehmensstrategie und Geschäftsmodell', en: 'Linking AI with corporate strategy and business model' },
+    subs: [
+      { name: { de: 'KI-Potenzial & Risikoverständnis', en: 'AI potential & risk understanding' },
+        desc: { de: 'Hat das Unternehmen analysiert wie KI das Geschäftsmodell verändert', en: 'Has the company analysed how AI changes the business model' },
+        levels: {
+          de: ['Keine Auseinandersetzung mit KI auf Geschäftsmodellebene.',
+               'KI wird als technisches Tool wahrgenommen, nicht als Geschäftsmodell-Faktor.',
+               'Erste informelle Diskussionen über KI-Chancen, keine systematische Risikobetrachtung.',
+               'Strukturierte Analyse einzelner Geschäftsbereiche hinsichtlich KI-Potenzial und -Risiko.',
+               'Vollständige Geschäftsmodell-Analyse liegt vor, inklusive Wettbewerbsveränderungen durch KI.',
+               'KI-Potenzial und -Risiko sind fester Bestandteil jeder strategischen Planungsrunde.'],
+          en: ['No engagement with AI at the business model level.',
+               'AI is perceived as a technical tool, not a business model factor.',
+               'First informal discussions about AI opportunities, no systematic risk assessment.',
+               'Structured analysis of individual business areas regarding AI potential and risk.',
+               'Complete business model analysis exists, including competitive changes through AI.',
+               'AI potential and risk are a fixed part of every strategic planning round.']
+        }
+      },
+      { name: { de: 'Strategische Priorisierung', en: 'Strategic prioritisation' },
+        desc: { de: 'Welche KI-Initiativen haben Vorrang mit direktem Bezug zur Wettbewerbsposition', en: 'Which AI initiatives have priority with direct reference to competitive position' },
+        levels: {
+          de: ['Keine Priorisierung. KI-Projekte entstehen zufällig oder auf Einzelinitiative.',
+               'Lose Sammlung von Ideen ohne Bewertungsrahmen.',
+               'Erste Priorisierungsversuche, meist nach Machbarkeit statt nach strategischem Wert.',
+               'Priorisierungsrahmen existiert, Initiativen werden nach Wertbeitrag und Wettbewerbsrelevanz bewertet.',
+               'Klare Priorisierungslogik ist dokumentiert und wird konsistent angewandt.',
+               'Dynamische Priorisierung passt sich kontinuierlich an Marktveränderungen und neue KI-Möglichkeiten an.'],
+          en: ['No prioritisation. AI projects emerge randomly or on individual initiative.',
+               'Loose collection of ideas without an evaluation framework.',
+               'First prioritisation attempts, mostly by feasibility rather than strategic value.',
+               'Prioritisation framework exists; initiatives are evaluated by value contribution and competitive relevance.',
+               'Clear prioritisation logic is documented and consistently applied.',
+               'Dynamic prioritisation continuously adapts to market changes and new AI opportunities.']
+        }
+      },
+      { name: { de: 'Zielbild & Meilensteine', en: 'Target vision & milestones' },
+        desc: { de: 'Zeitlich strukturierter Plan mit konkreten messbaren Etappen und Ressourcenzuweisung', en: 'Time-structured plan with concrete measurable milestones and resource allocation' },
+        levels: {
+          de: ['Kein Plan, keine Zielsetzung.',
+               'Vage Absichtserklärungen ohne Zeitbezug oder Verantwortlichkeit.',
+               'Grober Zeithorizont mit ersten Meilensteinen, aber ohne Budget und Ownership.',
+               'Strukturierter Plan mit klaren Meilensteinen, Budgetrahmen und Verantwortlichkeiten.',
+               'Detaillierter Rollout-Plan mit KPIs, Review-Zyklen und definierten Ressourcen.',
+               'Lebendige Roadmap die regelmäßig aktualisiert wird und mit OKRs verknüpft ist.'],
+          en: ['No plan, no objectives.',
+               'Vague statements of intent without timelines or accountability.',
+               'Rough time horizon with first milestones, but without budget and ownership.',
+               'Structured plan with clear milestones, budget framework and responsibilities.',
+               'Detailed rollout plan with KPIs, review cycles and defined resources.',
+               'Living roadmap that is regularly updated and linked to OKRs.']
+        }
+      },
+      { name: { de: 'Transformations- & Adoptionsplanung', en: 'Transformation & adoption planning' },
+        desc: { de: 'Strukturierter Plan wie die Organisation durch die KI-Veränderung geführt wird', en: 'Structured plan for how the organisation is guided through the AI change' },
+        levels: {
+          de: ['Kein Bewusstsein dass KI organisatorischen Wandel erfordert.',
+               'Change-Aspekt bekannt, aber kein Plan vorhanden.',
+               'Erste Kommunikationsmaßnahmen zu KI, keine systematische Begleitung.',
+               'Change-Plan existiert mit Kommunikations-, Schulungs- und Feedback-Elementen.',
+               'Strukturiertes Transformationsprogramm mit Ambassadoren, Erfolgsmessung und Iterationszyklen.',
+               'Kontinuierliches Transformationsmanagement ist institutionalisiert und datengestützt.'],
+          en: ['No awareness that AI requires organisational change.',
+               'Change aspect known, but no plan exists.',
+               'First communication measures on AI, no systematic support.',
+               'Change plan exists with communication, training and feedback elements.',
+               'Structured transformation programme with ambassadors, success measurement and iteration cycles.',
+               'Continuous transformation management is institutionalised and data-driven.']
+        }
+      }
+    ]
+  },
+  {
+    id: 'data', color: '#BAD0B2',
+    name: { de: 'Daten & Infrastruktur', en: 'Data & Infrastructure' },
+    desc: { de: 'Fundament für trainierbare, skalierbare und rechtskonforme KI-Systeme', en: 'Foundation for trainable, scalable and compliant AI systems' },
+    subs: [
+      { name: { de: 'Datenverfügbarkeit', en: 'Data availability' },
+        desc: { de: 'Ausreichende Datenmenge in den relevanten Domänen für KI-Training und Betrieb', en: 'Sufficient data volume in relevant domains for AI training and operation' },
+        levels: {
+          de: ['Daten sind in Silos gesperrt oder gar nicht digital vorhanden.',
+               'Daten existieren, sind aber nicht strukturiert abrufbar oder zugänglich.',
+               'Daten aus einzelnen Bereichen sind zugänglich, bereichsübergreifend noch nicht.',
+               'Zentrale Datenverfügbarkeit für die wichtigsten KI-Anwendungsfälle ist gegeben.',
+               'Umfassende Datenverfügbarkeit über alle relevanten Bereiche, inkl. Echtzeit-Daten.',
+               'Vollständig automatisierte Datenpipelines liefern alle benötigten Daten in Echtzeit und in Qualität.'],
+          en: ['Data is locked in silos or not digitally available at all.',
+               'Data exists but is not structured or retrievable.',
+               'Data from individual areas is accessible, cross-area not yet.',
+               'Central data availability for the most important AI use cases is given.',
+               'Comprehensive data availability across all relevant areas, including real-time data.',
+               'Fully automated data pipelines deliver all needed data in real time and in quality.']
+        }
+      },
+      { name: { de: 'Datenqualität', en: 'Data quality' },
+        desc: { de: 'Sauberkeit, Konsistenz und Verlässlichkeit der vorhandenen Daten für KI-Einsatz', en: 'Cleanliness, consistency and reliability of existing data for AI use' },
+        levels: {
+          de: ['Daten sind unstrukturiert, inkonsistent und nicht für KI nutzbar.',
+               'Einzelne Datensätze sind nutzbar, aber ohne systematische Qualitätssicherung.',
+               'Erste Datenqualitätsprozesse existieren in einzelnen Bereichen.',
+               'Definierte Datenqualitätsstandards werden unternehmensweit angewandt und überwacht.',
+               'Automatisierte Qualitätsprüfung mit klaren SLAs und Eskalationsprozessen.',
+               'Kontinuierliche datengestützte Qualitätsoptimierung ist vollständig automatisiert und auditierbar.'],
+          en: ['Data is unstructured, inconsistent and not usable for AI.',
+               'Individual datasets are usable, but without systematic quality assurance.',
+               'First data quality processes exist in individual areas.',
+               'Defined data quality standards are applied and monitored company-wide.',
+               'Automated quality checking with clear SLAs and escalation processes.',
+               'Continuous data-driven quality optimisation is fully automated and auditable.']
+        }
+      },
+      { name: { de: 'Datenarchitektur', en: 'Data architecture' },
+        desc: { de: 'Technische Infrastruktur zur Datenspeicherung, -verarbeitung und -bereitstellung', en: 'Technical infrastructure for data storage, processing and provision' },
+        levels: {
+          de: ['Keine einheitliche Dateninfrastruktur. Daten liegen in isolierten Einzelsystemen.',
+               'Erste Konsolidierungsversuche, aber keine kohärente Architektur.',
+               'Grundlegende Data-Warehouse-Strukturen vorhanden, kein einheitlicher Datenzugang.',
+               'Data Lake oder modernes Warehouse mit definierten Zugriffsschichten und Governance.',
+               'Skalierbare, cloudbasierte Architektur mit klaren Schnittstellen für KI-Systeme.',
+               'Vollständig automatisierte, selbst-optimierende Datenplattform die KI-Anforderungen antizipiert.'],
+          en: ['No unified data infrastructure. Data is in isolated individual systems.',
+               'First consolidation attempts, but no coherent architecture.',
+               'Basic data warehouse structures in place, no unified data access.',
+               'Data lake or modern warehouse with defined access layers and governance.',
+               'Scalable, cloud-based architecture with clear interfaces for AI systems.',
+               'Fully automated, self-optimising data platform that anticipates AI requirements.']
+        }
+      }
+    ]
+  },
+  {
+    id: 'implementation', color: '#FACB41',
+    name: { de: 'Umsetzung & Integration', en: 'Implementation & Integration' },
+    desc: { de: 'Reale operative Einbettung von KI in Prozesse, Produkte und IT-Systeme', en: 'Real operative embedding of AI in processes, products and IT systems' },
+    subs: [
+      { name: { de: 'KI in Kernprozessen', en: 'AI in core processes' },
+        desc: { de: 'Operative Einbettung von KI in die wichtigsten Geschäftsprozesse, nicht nur Piloten', en: 'Operative embedding of AI in the most important business processes, not just pilots' },
+        levels: {
+          de: ['KI läuft in keinem Geschäftsprozess produktiv.',
+               'Erste Pilotprojekte in Randbereichen, kein Einfluss auf Kernprozesse.',
+               'KI unterstützt einzelne Kernprozesse punktuell, noch nicht systematisch.',
+               'KI ist in mehrere Kernprozesse integriert und liefert messbaren Mehrwert.',
+               'KI ist tief in die meisten Kernprozesse eingebettet mit klaren Schnittstellen und Ownership.',
+               'KI optimiert Kernprozesse kontinuierlich und autonom, Menschen übernehmen Steuerung und Ausnahmen.'],
+          en: ['AI does not run productively in any business process.',
+               'First pilot projects in peripheral areas, no impact on core processes.',
+               'AI supports individual core processes at specific points, not yet systematically.',
+               'AI is integrated into several core processes and delivers measurable value.',
+               'AI is deeply embedded in most core processes with clear interfaces and ownership.',
+               'AI optimises core processes continuously and autonomously; humans handle steering and exceptions.']
+        }
+      },
+      { name: { de: 'KI im Produkt', en: 'AI in the product' },
+        desc: { de: 'KI als Teil des eigenen Produkts für Kunden, nicht nur interne Nutzung', en: 'AI as part of the own product for customers, not just internal use' },
+        levels: {
+          de: ['KI ist kein Bestandteil des Produkts oder der Kundenleistung.',
+               'Erste Überlegungen KI ins Produkt zu bringen, kein konkretes Vorhaben.',
+               'KI-Feature ist in Entwicklung oder als Pilot beim Kunden.',
+               'KI-Feature ist im Produkt live und wird von Kunden genutzt, Impact wird gemessen.',
+               'Mehrere KI-Features differenzieren das Produkt am Markt messbar.',
+               'KI ist zentraler Produktbestandteil und entscheidender Wettbewerbsvorteil.'],
+          en: ['AI is not part of the product or customer service.',
+               'First thoughts about bringing AI into the product, no concrete plan.',
+               'AI feature is in development or as a pilot with the customer.',
+               'AI feature is live in the product and used by customers; impact is measured.',
+               'Multiple AI features measurably differentiate the product in the market.',
+               'AI is a central product component and decisive competitive advantage.']
+        }
+      },
+      { name: { de: 'KI-Toolbereitstellung & Enablement', en: 'AI tool provision & enablement' },
+        desc: { de: 'Hat das Unternehmen die richtigen KI-Tools deployt und mit Support unterlegt', en: 'Has the company deployed the right AI tools and provided support' },
+        levels: {
+          de: ['Keine KI-Tools für Mitarbeiter verfügbar.',
+               'Einzelne Mitarbeiter nutzen private Tools auf eigene Initiative.',
+               'Erste offizielle Tools sind freigegeben, aber ohne strukturierten Rollout oder Support.',
+               'Standardisierter Toolstack ist unternehmensweit verfügbar mit Onboarding und Basis-Support.',
+               'Bedarfsgerechter Toolstack mit rollenspezifischen Zugängen, Schulungen und laufendem Support.',
+               'Vollständig verwaltetes KI-Tool-Ökosystem mit kontinuierlicher Evaluation und Optimierung.'],
+          en: ['No AI tools available for employees.',
+               'Individual employees use private tools on their own initiative.',
+               'First official tools approved, but without structured rollout or support.',
+               'Standardised toolstack available company-wide with onboarding and basic support.',
+               'Needs-based toolstack with role-specific access, training and ongoing support.',
+               'Fully managed AI tool ecosystem with continuous evaluation and optimisation.']
+        }
+      },
+      { name: { de: 'Legacy-Systemanbindung', en: 'Legacy system integration' },
+        desc: { de: 'Technische Anbindung von KI-Systemen an bestehende IT-Bestandssysteme', en: 'Technical connection of AI systems to existing IT legacy systems' },
+        levels: {
+          de: ['Bestandssysteme sind vollständig isoliert, keine Schnittstellen vorhanden.',
+               'Datenaustausch nur manuell möglich, keine API-Anbindung.',
+               'Erste Schnittstellen zu einzelnen Systemen, kein einheitliches Integrationskonzept.',
+               'Definiertes Integrationskonzept mit funktionierenden Anbindungen für Kernsysteme.',
+               'Stabile, wartungsarme Integration aller relevanten Systeme mit Monitoring.',
+               'Vollständig automatisierte bidirektionale Integration, Legacy-Modernisierung ist im Gange.'],
+          en: ['Legacy systems are completely isolated, no interfaces available.',
+               'Data exchange only manually possible, no API connection.',
+               'First interfaces to individual systems, no unified integration concept.',
+               'Defined integration concept with functioning connections for core systems.',
+               'Stable, low-maintenance integration of all relevant systems with monitoring.',
+               'Fully automated bidirectional integration, legacy modernisation is underway.']
+        }
+      }
+    ]
+  },
+  {
+    id: 'governance', color: '#A49BB3',
+    name: { de: 'Governance & Ethik', en: 'Governance & Ethics' },
+    desc: { de: 'Verantwortungsstrukturen, Compliance und ethisches KI-Handeln', en: 'Responsibility structures, compliance and ethical AI action' },
+    subs: [
+      { name: { de: 'Verantwortungsstruktur & Entscheidungshoheit', en: 'Responsibility structure & decision authority' },
+        desc: { de: 'Klare Ownership für KI-Initiativen mit definierter Entscheidungsbefugnis und Budget-Verantwortung', en: 'Clear ownership for AI initiatives with defined decision-making authority and budget responsibility' },
+        levels: {
+          de: ['Keine definierte Verantwortung für KI im Unternehmen.',
+               'KI-Themen landen zufällig bei wechselnden Personen ohne Mandat.',
+               'Informelle KI-Verantwortliche erkennbar, ohne formales Mandat oder Budget.',
+               'Formale Rolle mit Mandat und Budget existiert, Entscheidungshoheit ist definiert.',
+               'Klare Governance-Struktur mit Macht-, Prozess- und Fachpromotoren auf allen Ebenen.',
+               'Institutionalisierte KI-Governance mit regelmäßigem Reporting an die Geschäftsführung.'],
+          en: ['No defined responsibility for AI in the company.',
+               'AI topics land randomly with rotating people without mandate.',
+               'Informal AI responsibilities recognisable, without formal mandate or budget.',
+               'Formal role with mandate and budget exists; decision authority is defined.',
+               'Clear governance structure with power, process and expert promoters at all levels.',
+               'Institutionalised AI governance with regular reporting to the management board.']
+        }
+      },
+      { name: { de: 'Ethikrichtlinien', en: 'Ethics guidelines' },
+        desc: { de: 'Formalisierte Grundsätze für fairen, transparenten und diskriminierungsfreien KI-Einsatz', en: 'Formalised principles for fair, transparent and non-discriminatory AI use' },
+        levels: {
+          de: ['Keine Auseinandersetzung mit KI-Ethik.',
+               'Ethik wird als Randthema wahrgenommen, keine internen Richtlinien.',
+               'Erste informelle Leitlinien oder Prinzipien, nicht dokumentiert.',
+               'Dokumentierte Ethikrichtlinien existieren und sind kommuniziert.',
+               'Ethikrichtlinien sind in Entwicklungs- und Beschaffungsprozesse integriert.',
+               'KI-Ethik ist institutionalisiert mit regelmäßigen Audits und externer Überprüfung.'],
+          en: ['No engagement with AI ethics.',
+               'Ethics is perceived as a peripheral topic, no internal guidelines.',
+               'First informal guidelines or principles, not documented.',
+               'Documented ethics guidelines exist and are communicated.',
+               'Ethics guidelines are integrated into development and procurement processes.',
+               'AI ethics is institutionalised with regular audits and external review.']
+        }
+      },
+      { name: { de: 'Sicherheitsstandards', en: 'Security standards' },
+        desc: { de: 'Technische und prozessuale Schutzmaßnahmen für KI-Systeme bezüglich Cybersecurity und Datenschutz', en: 'Technical and procedural protective measures for AI systems regarding cybersecurity and data protection' },
+        levels: {
+          de: ['Keine spezifischen Sicherheitsmaßnahmen für KI-Systeme.',
+               'Allgemeine IT-Security, keine KI-spezifischen Maßnahmen.',
+               'Erste KI-spezifische Sicherheitsrichtlinien in Entwicklung.',
+               'Definierte Sicherheitsstandards für KI-Systeme sind implementiert und dokumentiert.',
+               'Regelmäßige Sicherheitsaudits für KI-Systeme, Vorfallsmanagement ist definiert.',
+               'Vollständiges KI-Sicherheitsframework mit kontinuierlichem Monitoring und Penetrationstests.'],
+          en: ['No specific security measures for AI systems.',
+               'General IT security, no AI-specific measures.',
+               'First AI-specific security guidelines in development.',
+               'Defined security standards for AI systems are implemented and documented.',
+               'Regular security audits for AI systems; incident management is defined.',
+               'Complete AI security framework with continuous monitoring and penetration tests.']
+        }
+      },
+      { name: { de: 'Monitoring & Governance-Kontrolle', en: 'Monitoring & governance control' },
+        desc: { de: 'Laufende Überwachung ob KI-Systeme regelkonform, fair und wie erwartet funktionieren', en: 'Ongoing monitoring of whether AI systems operate compliantly, fairly and as expected' },
+        levels: {
+          de: ['Kein Monitoring von KI-Systemen nach dem Go-live.',
+               'Manuelle sporadische Überprüfungen ohne Systematik.',
+               'Erste Monitoring-Metriken definiert, aber kein regelmäßiger Review-Prozess.',
+               'Regelmäßiges Monitoring mit definierten Schwellenwerten und Eskalationspfaden.',
+               'Automatisiertes Monitoring mit Alerts, Drift-Erkennung und dokumentierten Reaktionsprozessen.',
+               'Vollständiges KI-Observability-Framework mit Echtzeit-Überwachung und selbst-korrigierenden Mechanismen.'],
+          en: ['No monitoring of AI systems after go-live.',
+               'Manual sporadic checks without systematics.',
+               'First monitoring metrics defined, but no regular review process.',
+               'Regular monitoring with defined thresholds and escalation paths.',
+               'Automated monitoring with alerts, drift detection and documented response processes.',
+               'Complete AI observability framework with real-time surveillance and self-correcting mechanisms.']
+        }
+      },
+      { name: { de: 'AI Act & Datenschutz-Compliance', en: 'AI Act & data protection compliance' },
+        desc: { de: 'Rechtskonformität nach EU AI Act, DSGVO und weiteren regulatorischen Anforderungen', en: 'Legal compliance with EU AI Act, GDPR and further regulatory requirements' },
+        levels: {
+          de: ['Kein Bewusstsein für regulatorische Anforderungen an KI.',
+               'DSGVO-Grundlagen bekannt, AI Act ist dem Namen nach bekannt, wird aber nicht aktiv einbezogen.',
+               'Erste Auseinandersetzung mit AI Act-Risikoklassifizierung. Eigene KI-Systeme grob identifiziert, formale Risikoklassifizierung noch nicht durchgeführt.',
+               'Risikoklassifizierung der eigenen KI-Systeme nach AI Act ist durchgeführt, erste Maßnahmen umgesetzt, DSGVO-Datenschutz-Folgeabschätzungen liegen vor.',
+               'Strukturiertes Compliance-Framework für AI Act und DSGVO ist implementiert, Verantwortlichkeiten klar zugewiesen, interne Audits finden regelmäßig statt.',
+               'Vollständige AI Act-Konformität inklusive laufendem Monitoring, Audits und proaktiver Regulierungsbeobachtung.'],
+          en: ['No awareness of regulatory requirements for AI.',
+               'GDPR basics known; AI Act is known by name but not actively considered.',
+               'First engagement with AI Act risk classification. Own AI systems roughly identified; formal risk classification not yet conducted.',
+               'Risk classification of own AI systems per AI Act completed, first measures implemented, GDPR data protection impact assessments are available.',
+               'Structured compliance framework for AI Act and GDPR implemented; responsibilities clearly assigned; internal audits conducted regularly.',
+               'Full AI Act compliance including ongoing monitoring, audits and proactive regulatory observation.']
+        }
+      }
+    ]
+  },
+  {
+    id: 'impact', color: '#B7CDE0',
+    name: { de: 'Impact & Skalierung', en: 'Impact & Scaling' },
+    desc: { de: 'Messbarkeit, Skalierbarkeit und Zukunftsfähigkeit der KI-Initiative', en: 'Measurability, scalability and future-readiness of the AI initiative' },
+    subs: [
+      { name: { de: 'Wirkungsmessung & ROI', en: 'Impact measurement & ROI' },
+        desc: { de: 'Strukturierte Messung des messbaren Werts von KI-Initiativen, finanziell und operativ', en: 'Structured measurement of the measurable value of AI initiatives, financially and operationally' },
+        levels: {
+          de: ['Kein Bewusstsein dass KI-Wirkung gemessen werden sollte.',
+               'Anekdotische Erfolgsberichte, keine systematische Messung.',
+               'Erste KPIs definiert, aber nicht regelmäßig erhoben.',
+               'Strukturiertes Reporting mit definierten KPIs und regelmäßigem Review.',
+               'ROI-Nachweis liegt für alle wesentlichen KI-Initiativen vor und wird kommuniziert.',
+               'Vollständiges Impact-Framework verknüpft KI-Investitionen direkt mit Geschäftsergebnissen.'],
+          en: ['No awareness that AI impact should be measured.',
+               'Anecdotal success reports, no systematic measurement.',
+               'First KPIs defined, but not regularly collected.',
+               'Structured reporting with defined KPIs and regular review.',
+               'ROI evidence exists for all significant AI initiatives and is communicated.',
+               'Complete impact framework links AI investments directly to business outcomes.']
+        }
+      },
+      { name: { de: 'Automatisierungsgrad', en: 'Degree of automation' },
+        desc: { de: 'Ausmaß der KI-basierten Automatisierung von vorher manuellen Prozessen', en: 'Extent of AI-based automation of previously manual processes' },
+        levels: {
+          de: ['Keine Automatisierung durch KI.',
+               'Einzelne manuelle Schritte werden durch KI beschleunigt, kein vollständiger Prozess automatisiert.',
+               'Erste vollständige Teilprozesse sind automatisiert.',
+               'Mehrere Prozesse laufen vollständig automatisiert mit menschlicher Überwachung.',
+               'Wesentliche Teile der Wertschöpfungskette sind automatisiert, Menschen fokussieren auf Ausnahmen.',
+               'Hochgradig automatisierte Prozesslandschaft, kontinuierliche Erweiterung durch neue KI-Fähigkeiten.'],
+          en: ['No automation through AI.',
+               'Individual manual steps are accelerated by AI; no complete process is automated.',
+               'First complete sub-processes are automated.',
+               'Multiple processes run fully automated with human oversight.',
+               'Significant parts of the value chain are automated; humans focus on exceptions.',
+               'Highly automated process landscape, continuously expanded by new AI capabilities.']
+        }
+      },
+      { name: { de: 'Systemflexibilität & Skalierbarkeit', en: 'System flexibility & scalability' },
+        desc: { de: 'Architektonische Fähigkeit der KI-Systeme mit steigenden Anforderungen zu wachsen', en: 'Architectural ability of AI systems to grow with increasing requirements' },
+        levels: {
+          de: ['KI-Systeme sind monolithisch und nicht skalierbar.',
+               'Skalierung erfordert erheblichen manuellen Aufwand.',
+               'Erste Cloud-Komponenten vorhanden, Skalierung möglich aber aufwändig.',
+               'Modulare Architektur ermöglicht bedarfsgerechte Skalierung ohne Systemunterbrechung.',
+               'Elastische Infrastruktur skaliert automatisch, neue KI-Modelle können schnell integriert werden.',
+               'Vollständig flexible KI-Plattform adaptiert sich autonom an neue Anforderungen und Technologien.'],
+          en: ['AI systems are monolithic and not scalable.',
+               'Scaling requires significant manual effort.',
+               'First cloud components in place; scaling possible but complex.',
+               'Modular architecture enables needs-based scaling without system interruption.',
+               'Elastic infrastructure scales automatically; new AI models can be integrated quickly.',
+               'Fully flexible AI platform adapts autonomously to new requirements and technologies.']
+        }
+      }
+    ]
+  }
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const istStand = dims.map(() => 0);
+const industryStandard = dims.map(() => 4);
+// subScores[di][si]: -1 = no data / excluded, 0-5 = score
+const subScores = dims.map(d => d.subs.map(() => 0));
+const subScored = dims.map(d => d.subs.map(() => false));
+const subFlags = dims.map(d => d.subs.map(() => null)); // 'nodata' | 'insufficient' | null
+
+const levelColors = ['#32174D','#005B8C','#BAD0B2','#FACB41','#A49BB3','#B7CDE0'];
+const levelBg    = ['#DCD9E3','#EAF2F8','#EAF6F1','#FFF7DE','#DCD9E3','#EAF2F8'];
+
+/* ============================================================
+   CHART
+   ============================================================ */
+const ctx = document.getElementById('radar').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'radar',
+  data: {
+    labels: dims.map(d => d.name.de),
+    datasets: [
+      { label: 'Industriestandard', data: [...industryStandard], borderColor: '#A49BB3', backgroundColor: 'rgba(164,155,179,0.07)', borderWidth: 1.5, borderDash: [5,3], pointRadius: 4, pointBackgroundColor: '#A49BB3', order: 2 },
+      { label: 'Ist-Stand', data: [...istStand], borderColor: '#005B8C', backgroundColor: 'rgba(0,91,140,0.1)', borderWidth: 2, pointRadius: 5, pointBackgroundColor: '#005B8C', order: 1 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { display: false } },
+    scales: { r: {
+      min: 0, max: 5,
+      ticks: { stepSize: 1, font: { size: 11 }, backdropColor: 'transparent', color: 'rgba(50,23,77,0.4)', callback: v => v === 0 ? '' : v },
+      pointLabels: { font: { size: 12, weight: '600' }, color: 'rgba(50,23,77,0.8)', padding: 8 },
+      grid: { color: 'rgba(50,23,77,0.06)' },
+      angleLines: { color: 'rgba(50,23,77,0.06)' }
+    }}
+  }
+});
+
+/* ============================================================
+   SLIDERS
+   ============================================================ */
+function buildSliders() {
+  const area = document.getElementById('slider-area');
+  dims.forEach((d, i) => {
+    const row = document.createElement('div');
+    row.className = 'slider-row';
+    row.innerHTML = `
+      <div class="slider-label">
+        <span class="slider-name"><span class="dim-dot" style="background:${d.color}"></span>${d.name.de}</span>
+        <span class="slider-val" id="ist-val-${i}">${istStand[i]}</span>
+      </div>
+      <input type="range" min="0" max="5" step="1" value="${istStand[i]}" id="ist-${i}" oninput="updateIst(${i},this.value)" style="accent-color:${d.color};width:100%">
+      <div class="slider-label standard-label">
+        <span data-i18n-standard>${t('industryStandard')}</span>
+        <span class="slider-val" id="standard-val-${i}">${industryStandard[i]}</span>
+      </div>
+    `;
+    area.appendChild(row);
+  });
+}
+
+function updateIst(i, v) {
+  istStand[i] = Number(v);
+  document.getElementById(`ist-val-${i}`).textContent = v;
+  chart.data.datasets[1].data = [...istStand];
+  chart.update('none');
+}
+function resetAll() {
+  dims.forEach((_, i) => {
+    istStand[i] = 0;
+    document.getElementById(`ist-${i}`).value = 0;
+    document.getElementById(`ist-val-${i}`).textContent = 0;
+    subScores[i] = dims[i].subs.map(() => 0);
+    subScored[i] = dims[i].subs.map(() => false);
+    subFlags[i] = dims[i].subs.map(() => null);
+    dims[i].subs.forEach((_, j) => updateSubScore(i, j, 0, false));
+  });
+  chart.data.datasets[1].data = [...istStand];
+  chart.data.datasets[0].data = [...industryStandard];
+  chart.update('none');
+}
+
+/* ============================================================
+   DIMENSION BLOCKS
+   ============================================================ */
+function updateSubScore(di, si, v, markScored = true) {
+  subScores[di][si] = v;
+  if (markScored) subScored[di][si] = v !== null && v >= 0;
+  const badge = document.getElementById(`badge-${di}-${si}`);
+  const sliderEl = document.getElementById(`sub-${di}-${si}`);
+  const subValEl = document.getElementById(`subval-${di}-${si}`);
+  const insufBtn = document.getElementById(`insufbtn-${di}-${si}`);
+
+  if (badge) {
+    if (v === null) {
+      badge.textContent = t('level') + ' ?';
+      badge.style.background = levelBg[0];
+      badge.style.color = levelColors[0];
+    } else if (v === -1) {
+      badge.textContent = t('level') + ' ?';
+      badge.style.background = '#f0f0f0';
+      badge.style.color = '#999';
+    } else {
+      badge.textContent = t('level') + ' ' + v;
+      badge.style.background = levelBg[v];
+      badge.style.color = levelColors[v];
+    }
+  }
+  if (insufBtn) insufBtn.classList.toggle('active', subFlags[di][si] === 'insufficient');
+  if (sliderEl && v !== null && v >= 0) sliderEl.value = v;
+  if (sliderEl) sliderEl.disabled = v === -1 || subFlags[di][si] === 'insufficient' || subFlags[di][si] === 'nodata';
+  if (subValEl) subValEl.textContent = v !== null && v >= 0 ? v : '-';
+
+  document.querySelectorAll(`#levels-${di}-${si} .level-row`).forEach((row, idx) => {
+    const isActive = v !== null && v >= 0 && idx === v;
+    row.classList.toggle('active-row', isActive);
+    row.style.background = isActive ? levelBg[v] : '';
+    const num = row.querySelector('.level-num');
+    if (num) {
+      num.style.background = isActive ? levelColors[v] : '#f0f0f0';
+      num.style.color = isActive ? '#fff' : '#888';
+    }
+  });
+
+  recalcDimScore(di);
+  if (chatState.dimIdx === di) {
+    updateChatSubtitle(di);
+    updateProgressDot();
+  }
+}
+
+function recalcDimScore(di) {
+  const scores = subScores[di].filter((s, si) => subScored[di][si] && s !== null && s >= 0);
+  const dimEl = document.getElementById(`dim-score-${di}`);
+  const dimNumEl = document.getElementById(`dim-score-num-${di}`);
+  if (!dimEl) return;
+  if (scores.length === 0) {
+    dimEl.style.display = 'none';
+    istStand[di] = 0;
+    chart.data.datasets[1].data = [...istStand];
+    chart.update('none');
+    document.getElementById(`ist-${di}`).value = 0;
+    document.getElementById(`ist-val-${di}`).textContent = 0;
+    return;
+  }
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const rounded = Math.round(avg * 10) / 10;
+  dimEl.style.display = 'flex';
+  dimNumEl.textContent = rounded;
+  istStand[di] = Math.round(avg);
+  chart.data.datasets[1].data = [...istStand];
+  chart.update('none');
+  document.getElementById(`ist-${di}`).value = Math.round(avg);
+  document.getElementById(`ist-val-${di}`).textContent = Math.round(avg);
+}
+
+function setManualSubScore(di, si, v) {
+  subFlags[di][si] = null;
+  updateSubScore(di, si, Number(v), true);
+}
+
+function setSubInsufficient(di, si) {
+  const isActive = subFlags[di][si] === 'insufficient';
+  if (isActive) {
+    subFlags[di][si] = null;
+    subScored[di][si] = false;
+    updateSubScore(di, si, 0, false);
+  } else {
+    subFlags[di][si] = 'insufficient';
+    subScored[di][si] = false;
+    updateSubScore(di, si, -1, false);
+  }
+}
+
+function buildDimBlocks() {
+  const container = document.getElementById('dim-blocks');
+  dims.forEach((d, di) => {
+    const block = document.createElement('div');
+    block.className = 'dim-block';
+    let subsHtml = '';
+    d.subs.forEach((s, si) => {
+      let levelsHtml = '';
+      s.levels.de.forEach((txt, li) => {
+        levelsHtml += `<div class="level-row" id="lrow-${di}-${si}-${li}">
+          <div class="level-num" style="background:#f0f0f0;color:#888">${li}</div>
+          <div class="level-text" id="ltext-${di}-${si}-${li}">${txt}</div>
+        </div>`;
+      });
+      subsHtml += `
+        <div class="sub-item">
+          <div class="sub-header">
+            <div>
+              <span class="sub-name" id="subname-${di}-${si}">${s.name.de}</span>
+            </div>
+            <div class="sub-badges">
+              <span class="sub-score-badge" id="badge-${di}-${si}" style="background:${levelBg[0]};color:${levelColors[0]}">${t('level')} ?</span>
+              <button class="sub-flag-btn" id="insufbtn-${di}-${si}" onclick="setSubInsufficient(${di},${si})" data-i18n-insufficientbtn>${t('markInsufficient')}</button>
+            </div>
+          </div>
+          <p class="sub-desc" id="subdesc-${di}-${si}">${s.desc.de}</p>
+          <div class="sub-slider-row">
+            <input type="range" class="sub-slider" id="sub-${di}-${si}" min="0" max="5" step="1" value="0"
+              style="accent-color:${d.color}"
+              oninput="setManualSubScore(${di},${si},this.value)">
+            <span class="sub-val" id="subval-${di}-${si}">0</span>
+          </div>
+          <div class="level-table" id="levels-${di}-${si}">${levelsHtml}</div>
+        </div>`;
+    });
+
+    block.innerHTML = `
+      <div class="dim-header-btn" role="button" tabindex="0" onclick="toggleDim(this, ${di})" onkeydown="handleDimHeaderKey(event, this, ${di})">
+        <div class="dim-header-left">
+          <div class="dim-color-bar" style="background:${d.color}"></div>
+          <span id="dimname-${di}">${d.name.de}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="chat-launch-btn" style="background:${d.color};color:${di===2||di===3||di===5?'#32174D':'#fff'}" onclick="event.stopPropagation();openChat(${di})" data-i18n-chatlaunch>${t('chatLaunch')}</button>
+          <span class="dim-chevron">▼</span>
+        </div>
+      </div>
+      <div class="dim-body">
+        <div class="dim-score-summary" id="dim-score-${di}">
+          <span class="dim-score-num" id="dim-score-num-${di}">0</span>
+          <div><div style="font-size:12px;font-weight:600;color:var(--purple)">${d.name.de}</div><div class="dim-score-label" data-i18n="dimScore">${t('dimScore')}</div></div>
+        </div>
+        ${subsHtml}
+      </div>`;
+    container.appendChild(block);
+    d.subs.forEach((_, si) => updateSubScore(di, si, 0, false));
+  });
+}
+
+function toggleDim(btn, di) {
+  const body = btn.nextElementSibling;
+  const chev = btn.querySelector('.dim-chevron');
+  if (!body || !body.classList.contains('dim-body')) return;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.classList.toggle('open', !isOpen);
+}
+
+function openDimBlock(di) {
+  const block = document.querySelectorAll('.dim-block')[di];
+  if (!block) return;
+  const header = block.querySelector('.dim-header-btn');
+  const body = block.querySelector('.dim-body');
+  const chev = block.querySelector('.dim-chevron');
+  if (!header || !body) return;
+  body.classList.add('open');
+  if (chev) chev.classList.add('open');
+  header.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function handleDimHeaderKey(e, btn, di) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    toggleDim(btn, di);
+  }
+}
+
+/* ============================================================
+   LANGUAGE UPDATE FOR DYNAMIC CONTENT
+   ============================================================ */
+function updateDynamicLang() {
+  dims.forEach((d, di) => {
+    const nameEl = document.getElementById(`dimname-${di}`);
+    if (nameEl) nameEl.textContent = d.name[lang];
+    d.subs.forEach((s, si) => {
+      const nameEl2 = document.getElementById(`subname-${di}-${si}`);
+      if (nameEl2) nameEl2.textContent = s.name[lang];
+      const descEl = document.getElementById(`subdesc-${di}-${si}`);
+      if (descEl) descEl.textContent = s.desc[lang];
+      s.levels[lang].forEach((txt, li) => {
+        const el = document.getElementById(`ltext-${di}-${si}-${li}`);
+        if (el) el.textContent = txt;
+      });
+    });
+  });
+  chart.data.labels = dims.map(d => d.name[lang]);
+  chart.data.datasets[0].label = t('industryStandard');
+  chart.data.datasets[1].label = t('legend_ist');
+  chart.update('none');
+  const sliderArea = document.getElementById('slider-area');
+  sliderArea.querySelectorAll('.slider-name').forEach((el, i) => {
+    const dot = el.querySelector('.dim-dot');
+    el.textContent = '';
+    if (dot) el.appendChild(dot);
+    el.appendChild(document.createTextNode(dims[i].name[lang]));
+  });
+}
+
+const origSetLang = setLang;
+window.setLang = function(l) {
+  origSetLang(l);
+  updateDynamicLang();
+  if (chatState.dimIdx !== null) {
+    document.getElementById('chatTitle').textContent = dims[chatState.dimIdx].name[l] + ' ' + t('specialist');
+    updateChatSubtitle(chatState.dimIdx);
+    buildProgressDots(chatState.dimIdx);
+  }
+};
+
+/* ============================================================
+   CHATBOT
+   ============================================================ */
+const chatState = {
+  dimIdx: null,
+  subIdx: 0,
+  phase: 'idle', // 'questioning' | 'confirm' | 'disagreement' | 'manual' | 'done'
+  history: [],
+  pendingScore: null,
+  userDataSoFar: '',
+  disagreementCount: 0,
+};
+
+function detectProvider(key) {
+  if (!key || key === 'YOUR_API_KEY_HERE') return null;
+  const manualProvider = (API_PROVIDER || 'auto').toLowerCase().trim();
+  if (manualProvider === 'openai' || manualProvider === 'gemini') return manualProvider;
+  if (manualProvider !== 'auto') return 'invalid-provider';
+  if (key.startsWith('sk-') || key.startsWith('sk-proj-')) return 'openai';
+  if (key.startsWith('AIza')) return 'gemini';
+  return 'unknown';
+}
+
+async function callAI(messages, systemPrompt) {
+  const key = API_KEY;
+  const provider = detectProvider(key);
+  if (!provider) {
+    return lang === 'de'
+      ? 'Kein gültiger API-Schlüssel gefunden. Bitte tragen Sie Ihren Schlüssel in der lokalen .env-Datei ein und starten Sie den lokalen Server neu.'
+      : 'No valid API key found. Please add your key to the local .env file and restart the local server.';
+  }
+  if (provider === 'unknown') {
+    return lang === 'de'
+      ? 'Unbekanntes API-Schlüssel-Format. Für diese HTML-Datei muss ein OpenAI-Key mit sk- oder sk-proj- beginnen, oder ein Google AI Studio / Gemini API-Key mit AIza beginnen.'
+      : 'Unknown API key format. For this HTML file, use an OpenAI key starting with sk- or sk-proj-, or a Google AI Studio / Gemini API key starting with AIza.';
+  }
+  if (provider === 'invalid-provider') {
+    return lang === 'de'
+      ? 'Ungültiger API_PROVIDER. Bitte setzen Sie API_PROVIDER auf "auto", "openai" oder "gemini".'
+      : 'Invalid API_PROVIDER. Please set API_PROVIDER to "auto", "openai" or "gemini".';
+  }
+
+  if (provider === 'openai') {
+    const msgs = [{ role: 'system', content: systemPrompt }, ...messages];
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: 'gpt-4o-mini', messages: msgs, max_tokens: 600, temperature: 0.4 })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.choices[0].message.content.trim();
+  }
+
+  if (provider === 'gemini') {
+    const geminiMsgs = messages.map(m => ({ 
+      role: m.role === 'assistant' ? 'model' : 'user', 
+      parts: [{ text: m.content }] 
+    }));
+
+    const modelsToTry = [
+      'gemini-2.5-flash-lite', 
+      'gemini-2.0-flash-lite', 
+      'gemini-2.0-flash-lite-001',
+      'gemini-2.5-flash'      
+    ];
+
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: geminiMsgs,
+            generationConfig: { maxOutputTokens: 600, temperature: 0.4 }
+          })
+        });
+
+        const data = await res.json();
+        
+        // Falls Google einen Fehler zurückgibt (z.B. 503 High Demand), springe in den catch-Block
+        if (data.error) {
+          throw new Error(data.error.message);
+        }
+
+        // Wenn alles geklappt hat, Text zurückgeben und Schleife beenden
+        return data.candidates[0].content.parts[0].text.trim();
+
+      } catch (error) {
+        console.warn(`Modell ${model} fehlgeschlagen: ${error.message}. Versuche nächstes Backup...`);
+        lastError = error;
+        // Schleife läuft weiter zum nächsten Modell
+      }
+    }
+    // Wenn alle Modelle fehlschlagen, wirf den finalen Fehler
+    throw new Error(`Alle Gemini-Backup-Modelle waren überlastet. Letzter Fehler: ${lastError?.message}`);
+  }
+}
+
+function buildSystemPrompt(di) {
+  const d = dims[di];
+  const subDetails = d.subs.map((s, si) => {
+    const levels = s.levels[lang].map((l, i) => `  Level ${i}: ${l}`).join('\n');
+    return `Sub-dimension ${si+1}: ${s.name[lang]}\nDescription: ${s.desc[lang]}\nLevels:\n${levels}`;
+  }).join('\n\n');
+  const boundaries = getSubAssessmentBoundaries(di);
+
+  if (lang === 'de') {
+    return `Du bist ein hochspezialisierter KI-Reifegrad-Analyst für die Dimension "${d.name.de}" (${d.desc.de}).
+
+Du bewertest mittelständische Unternehmen in dieser Dimension. Dein Ziel: Für jede Unterdimension den passenden Reifelevel (0-5) zu ermitteln.
+
+UNTERDIMENSIONEN UND LEVEL-DEFINITIONEN:
+${subDetails}
+
+ABGRENZUNGEN:
+${boundaries}
+
+DEINE AUFGABEN:
+1. Stelle gezielte, konkrete Fragen um den Reifelevel je Unterdimension zu ermitteln.
+2. Frage nur nach Fakten, die direkt zur aktuell bewerteten Unterdimension passen. Verwende keine Indikatoren aus anderen Unterdimensionen.
+3. Wenn du genug Daten hast, schlage einen konkreten Level vor und begründe ihn kurz mit Bezug zu den Level-Definitionen.
+4. Antworte immer auf Deutsch, kurz und präzise.
+5. Stelle immer nur 1-2 Fragen gleichzeitig, nicht mehr.
+6. Wechsle niemals selbstständig zur nächsten Unterdimension. Wenn du einen Level vorschlägst, stoppe danach und warte auf die UI-Bestätigung "Ja, bestätigen" oder "Keine Daten vorhanden".
+7. Wenn der Nutzer widerspricht, frage nach dem konkreten Grund für die Abweichung.
+8. Nur wenn du wirklich alle verfügbaren Informationen verwertet hast und den Widerspruch des Nutzers trotzdem nicht verstehst, sage: "MANUAL_CONTROL" (dann übernimmt der Nutzer die manuelle Eingabe).
+9. Wenn zu wenig Daten vorliegen um eine fundierte Entscheidung zu treffen, sage: "INSUFFICIENT_DATA" und erkläre was noch benötigt wird.`;
+  } else {
+    return `You are a highly specialised AI maturity analyst for the dimension "${d.name.en}" (${d.desc.en}).
+
+You assess medium-sized companies in this dimension. Your goal: determine the appropriate maturity level (0-5) for each sub-dimension.
+
+SUB-DIMENSIONS AND LEVEL DEFINITIONS:
+${subDetails}
+
+BOUNDARIES:
+${boundaries}
+
+YOUR TASKS:
+1. Ask targeted, concrete questions to determine the maturity level per sub-dimension.
+2. Ask only for facts that directly fit the currently assessed sub-dimension. Do not use indicators from other sub-dimensions.
+3. When you have enough data, suggest a concrete level and briefly justify it with reference to the level definitions.
+4. Always respond in English, briefly and precisely.
+5. Always ask only 1-2 questions at a time, no more.
+6. Never move to the next sub-dimension yourself. When you suggest a level, stop there and wait for the UI confirmation "Yes, confirm" or "No data available".
+7. When the user disagrees, ask for the specific reason for the discrepancy.
+8. Only if you have truly processed all available information and still cannot understand the user's disagreement, say: "MANUAL_CONTROL" (the user then takes manual input).
+9. If too little data is available to make an informed decision, say: "INSUFFICIENT_DATA" and explain what is still needed.`;
+  }
+}
+
+function getSubAssessmentBoundaries(di) {
+  if (dims[di]?.id !== 'people') {
+    return lang === 'de'
+      ? 'Keine zusätzlichen Abgrenzungsregeln für diese Dimension.'
+      : 'No additional boundary rules for this dimension.';
+  }
+
+  if (lang === 'de') {
+    return `- Bedarfsbewusstsein bewertet, ob Mitarbeiter sinnvolle KI-Anwendungsfälle für ihre eigene Arbeit erkennen können.
+- Nutzungsbereitschaft bewertet Haltung, Neugier, Akzeptanz und Veränderungsbereitschaft. Frage hier NICHT nach Prozentzahlen, Anzahl aktiver Nutzer, Nutzungshäufigkeit oder konkreten Programmen/Schulungen.
+- Nutzungsfrequenz bewertet tatsächliche Nutzung im Arbeitsalltag: wie oft, wie breit, in welchen Teams/Rollen und für welche wiederkehrenden Aufgaben. Frage hier NICHT nach Einstellung, Motivation oder allgemeiner Offenheit.
+- Führungskompetenz KI bewertet ausschließlich Verständnis und Vorbild-/Entscheidungsfähigkeit der Führungskräfte.
+- Initiativen, Programme, Schulungen, Foren oder strukturierte Enablement-Maßnahmen sind nur Kontext. Sie dürfen nicht als direkter Score für Nutzungsbereitschaft gezählt werden; wenn sie strategisch relevant sind, gehören sie eher zu Strategie & Vision oder Transformations-/Adoptionsplanung.`;
+  }
+
+  return `- Needs awareness assesses whether employees can identify meaningful AI use cases for their own work.
+- Readiness to adopt assesses attitude, curiosity, acceptance and willingness to change. Do NOT ask for percentages, number of active users, usage frequency, or concrete programs/trainings here.
+- Usage frequency assesses actual use in daily work: how often, how broadly, in which teams/roles, and for which recurring tasks. Do NOT ask about attitude, motivation or general openness here.
+- Leadership AI competence assesses only leaders' understanding, role-modelling and decision capability.
+- Initiatives, programs, trainings, forums or structured enablement measures are context only. They must not be counted as a direct readiness score; if strategically relevant, they belong more to Strategy & Vision or transformation/adoption planning.`;
+}
+
+function buildSubPrompt(di, si) {
+  const d = dims[di];
+  const s = d.subs[si];
+  const boundaries = getSubAssessmentBoundaries(di);
+  if (lang === 'de') {
+    return `Jetzt bewerten wir: Unterdimension "${s.name.de}": ${s.desc.de}
+Stelle 1-2 gezielte Fragen um den richtigen Level für genau diese Unterdimension zu ermitteln.
+Halte diese Abgrenzung strikt ein:
+${boundaries}`;
+  } else {
+    return `Now we assess: Sub-dimension "${s.name.en}": ${s.desc.en}
+Ask 1-2 targeted questions to determine the correct level for exactly this sub-dimension.
+Strictly follow these boundaries:
+${boundaries}`;
+  }
+}
+
+function openChat(di) {
+  openDimBlock(di);
+  chatState.dimIdx = di;
+  chatState.subIdx = 0;
+  chatState.phase = 'questioning';
+  chatState.history = [];
+  chatState.pendingScore = null;
+  chatState.userDataSoFar = '';
+  chatState.disagreementCount = 0;
+
+  const d = dims[di];
+  document.getElementById('chatDimIcon').style.background = d.color;
+  document.getElementById('chatTitle').textContent = d.name[lang] + ' ' + t('specialist');
+  updateChatSubtitle(di);
+
+  buildProgressDots(di);
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatOverlay').classList.add('open');
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('chatSendBtn').disabled = false;
+
+  startSubDimension();
+}
+
+function buildProgressDots(di) {
+  const container = document.getElementById('progressDots');
+  container.innerHTML = '';
+  dims[di].subs.forEach((_, si) => {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot';
+    dot.title = dims[di].subs[si].name[lang];
+    dot.setAttribute('data-si', si);
+    dot.setAttribute('role', 'button');
+    dot.setAttribute('tabindex', '0');
+    dot.onclick = () => goToSubDimension(si);
+    dot.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        goToSubDimension(si);
+      }
+    };
+    if (subScored[di][si]) dot.classList.add('done');
+    else if (subScores[di][si] === -1) dot.classList.add('flagged');
+    container.appendChild(dot);
+  });
+  updateProgressDot();
+}
+
+function getScoredCount(di) {
+  return subScored[di].filter(Boolean).length;
+}
+
+function updateChatSubtitle(di) {
+  if (di === null || di === undefined) return;
+  const d = dims[di];
+  const scored = getScoredCount(di);
+  const suffix = lang === 'de' ? 'Unterdimensionen' : 'sub-dimensions';
+  document.getElementById('chatSubtitle').textContent = `${scored} ${t('subOf')} ${d.subs.length} ${suffix}`;
+}
+
+function updateProgressDot() {
+  const di = chatState.dimIdx;
+  const si = chatState.subIdx;
+  if (di === null) return;
+  document.querySelectorAll('.progress-dot').forEach((dot, idx) => {
+    dot.classList.remove('active');
+    if (subScored[di][idx]) dot.classList.add('done');
+    else if (subScores[di][idx] === -1) dot.classList.add('flagged');
+    else dot.classList.remove('done', 'flagged');
+    if (idx === si && chatState.phase !== 'done') dot.classList.add('active');
+  });
+}
+
+function goToSubDimension(si) {
+  const di = chatState.dimIdx;
+  if (di === null || si < 0 || si >= dims[di].subs.length) return;
+  chatState.subIdx = si;
+  chatState.phase = 'questioning';
+  chatState.history = [];
+  chatState.pendingScore = null;
+  chatState.userDataSoFar = '';
+  chatState.disagreementCount = 0;
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatInput').disabled = false;
+  document.getElementById('chatSendBtn').disabled = false;
+  updateChatSubtitle(di);
+  startSubDimension();
+}
+
+function closeChat() {
+  document.getElementById('chatOverlay').classList.remove('open');
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('chatOverlay')) closeChat();
+}
+
+function addMessage(role, text, extras) {
+  const msgs = document.getElementById('chatMessages');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ' + role;
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  wrap.innerHTML = `<div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div><div class="msg-time">${timeStr}</div>`;
+  if (extras) {
+    const row = document.createElement('div');
+    row.className = 'confirm-row';
+    row.innerHTML = extras;
+    wrap.appendChild(row);
+  }
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+  return wrap;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const el = document.createElement('div');
+  el.className = 'msg bot typing-indicator';
+  el.id = 'typing';
+  el.innerHTML = '<div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function hideTyping() {
+  const el = document.getElementById('typing');
+  if (el) el.remove();
+}
+
+function parseTypedDecision(text) {
+  const normalized = text.toLowerCase();
+  if (/(nicht genug|nicht genügend|zu wenig|keine daten|no data|insufficient data)/i.test(text)) {
+    return { type: 'no-data' };
+  }
+  const levelMatch = text.match(/\b(?:level|stufe)\s*([0-5])\b/i);
+  if (levelMatch && /(passt|richtig|korrekt|bestätig|confirm|yes|ja|genau|ok|okay|einverstanden|agree|besser)/i.test(text)) {
+    return { type: 'score-proposal', score: Number(levelMatch[1]) };
+  }
+  if (chatState.pendingScore !== null && /\b(ja|yes|confirm|bestätig|passt|richtig|korrekt|ok|okay|einverstanden|agree)\b/i.test(normalized)) {
+    return { type: 'score', score: chatState.pendingScore };
+  }
+  return null;
+}
+
+function askToConfirmScore(score) {
+  chatState.pendingScore = score;
+  chatState.phase = 'confirm';
+  const confirmHtml = `
+    <button class="confirm-btn primary" onclick="confirmScore(${score})">${t('confirmYes')}</button>
+    <button class="confirm-btn" onclick="userDisagrees()">${t('confirmNo')}</button>
+    <button class="confirm-btn danger" onclick="setNoData()">${t('confirmNoData')}</button>`;
+  addMessage('bot', lang === 'de'
+    ? `Ich habe Level ${score} als gemeinsamen Stand verstanden. Stimmen Sie diesem Level zu?`
+    : `I understood Level ${score} as the agreed assessment. Do you agree with this level?`, confirmHtml);
+}
+
+function stripPrematureNextSubdimension(text) {
+  const patterns = [
+    /\n\s*(?:Fahren wir|Weiter|Als nächstes|Nächste Unterdimension)[\s\S]*$/i,
+    /\n\s*(?:Let'?s continue|Moving on|Next sub-dimension|The next sub-dimension)[\s\S]*$/i
+  ];
+  return patterns.reduce((cleaned, pattern) => cleaned.replace(pattern, '').trim(), text);
+}
+
+async function startSubDimension() {
+  const di = chatState.dimIdx;
+  const si = chatState.subIdx;
+  const d = dims[di];
+
+  if (si >= d.subs.length) {
+    finishDimension();
+    return;
+  }
+
+  chatState.phase = 'questioning';
+  chatState.pendingScore = null;
+  chatState.disagreementCount = 0;
+  chatState.userDataSoFar = '';
+  updateProgressDot();
+
+  const subHeader = `[${si+1}/${d.subs.length}] ${d.subs[si].name[lang]}`;
+  const introText = lang === 'de'
+    ? `**Unterdimension ${si+1} von ${d.subs.length}: ${d.subs[si].name[lang]}**\n${d.subs[si].desc[lang]}`
+    : `**Sub-dimension ${si+1} of ${d.subs.length}: ${d.subs[si].name[lang]}**\n${d.subs[si].desc[lang]}`;
+  addMessage('bot', introText);
+
+  showTyping();
+  try {
+    const prompt = buildSubPrompt(di, si);
+    chatState.history.push({ role: 'user', content: prompt });
+    const reply = await callAI(chatState.history, buildSystemPrompt(di));
+    chatState.history.push({ role: 'assistant', content: reply });
+    hideTyping();
+    addMessage('bot', reply);
+  } catch (e) {
+    hideTyping();
+    addMessage('bot', lang === 'de' ? 'Fehler beim Laden: ' + e.message : 'Error loading: ' + e.message);
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || chatState.phase === 'idle' || chatState.phase === 'done') return;
+  input.value = '';
+  autoResize(input);
+
+  addMessage('user', text);
+  chatState.userDataSoFar += ' ' + text;
+
+  const typedDecision = parseTypedDecision(text);
+  if (typedDecision?.type === 'score') {
+    confirmScore(typedDecision.score, { addUserMessage: false });
+    return;
+  }
+  if (typedDecision?.type === 'score-proposal') {
+    askToConfirmScore(typedDecision.score);
+    return;
+  }
+  if (typedDecision?.type === 'no-data') {
+    setNoData({ addUserMessage: false });
+    return;
+  }
+
+  showTyping();
+  document.getElementById('chatSendBtn').disabled = true;
+
+  try {
+    let contextMsg = text;
+    if (chatState.phase === 'questioning') {
+      contextMsg = text;
+    } else if (chatState.phase === 'disagreement') {
+      const di = chatState.dimIdx;
+      const si = chatState.subIdx;
+      contextMsg = (lang === 'de'
+        ? `Der Nutzer widerspricht dem vorgeschlagenen Level ${chatState.pendingScore} für "${dims[di].subs[si].name.de}". Begründung: ${text}. Bitte überlege neu: Welcher Level ist korrekt basierend auf allen verfügbaren Daten? Schlage einen neuen Level vor oder erkläre warum du deinen vorherigen Vorschlag beibehältst. Wenn du alle Daten berücksichtigt hast und trotzdem keinen Konsens findest, sage "MANUAL_CONTROL".`
+        : `The user disagrees with the suggested level ${chatState.pendingScore} for "${dims[di].subs[si].name.en}". Reason: ${text}. Please reconsider: which level is correct based on all available data? Suggest a new level or explain why you maintain your previous suggestion. If you have considered all data and still cannot find consensus, say "MANUAL_CONTROL".`);
+    }
+
+    chatState.history.push({ role: 'user', content: contextMsg });
+    const reply = await callAI(chatState.history, buildSystemPrompt(chatState.dimIdx));
+    chatState.history.push({ role: 'assistant', content: reply });
+    hideTyping();
+    document.getElementById('chatSendBtn').disabled = false;
+
+    if (reply.includes('MANUAL_CONTROL')) {
+      const cleanReply = reply.replace('MANUAL_CONTROL', '').trim();
+      if (cleanReply) addMessage('bot', cleanReply);
+      showManualControl();
+      return;
+    }
+
+    if (reply.includes('INSUFFICIENT_DATA')) {
+      const cleanReply = reply.replace('INSUFFICIENT_DATA', '').trim();
+      addMessage('bot', cleanReply || (lang === 'de' ? 'Es liegen zu wenig Daten vor für eine fundierte Bewertung.' : 'Insufficient data for an informed assessment.'));
+      showInsufficientOptions();
+      return;
+    }
+
+    // check for level suggestion
+    const levelMatch = reply.match(/Level\s*([0-5])/i);
+    if (levelMatch && (chatState.phase === 'questioning' || chatState.phase === 'disagreement' || chatState.phase === 'confirm')) {
+      const cleanReply = stripPrematureNextSubdimension(reply);
+      chatState.pendingScore = parseInt(levelMatch[1]);
+      chatState.phase = 'confirm';
+      const di = chatState.dimIdx;
+      const si = chatState.subIdx;
+      const levelDesc = dims[di].subs[si].levels[lang][chatState.pendingScore];
+      const confirmHtml = `
+        <button class="confirm-btn primary" onclick="confirmScore(${chatState.pendingScore})">${t('confirmYes')}</button>
+        <button class="confirm-btn" onclick="userDisagrees()">${t('confirmNo')}</button>
+        <button class="confirm-btn danger" onclick="setNoData()">${t('confirmNoData')}</button>`;
+      addMessage('bot', cleanReply, confirmHtml);
+    } else {
+      addMessage('bot', reply);
+    }
+  } catch (e) {
+    hideTyping();
+    document.getElementById('chatSendBtn').disabled = false;
+    addMessage('bot', lang === 'de' ? 'Fehler: ' + e.message : 'Error: ' + e.message);
+  }
+}
+
+function confirmScore(score, options = {}) {
+  const { addUserMessage = true } = options;
+  const di = chatState.dimIdx;
+  const si = chatState.subIdx;
+  subFlags[di][si] = null;
+  updateSubScore(di, si, score);
+  if (addUserMessage) addMessage('user', t('confirmYes'));
+  addMessage('bot', lang === 'de'
+    ? `Level ${score} bestätigt. Weiter zur nächsten Unterdimension.`
+    : `Level ${score} confirmed. Moving to the next sub-dimension.`);
+  chatState.phase = 'questioning';
+  chatState.subIdx++;
+  setTimeout(() => startSubDimension(), 700);
+}
+
+function userDisagrees() {
+  chatState.phase = 'disagreement';
+  chatState.disagreementCount++;
+  addMessage('user', t('confirmNo'));
+  addMessage('bot', lang === 'de'
+    ? 'Ich verstehe. Können Sie mir erklären, warum Sie dem vorgeschlagenen Level widersprechen? Welche konkreten Informationen oder Einschätzungen führen Sie zu einer anderen Bewertung?'
+    : 'I understand. Can you explain why you disagree with the suggested level? What specific information or assessment leads you to a different rating?');
+}
+
+function setNoData(options = {}) {
+  const { addUserMessage = true } = options;
+  const di = chatState.dimIdx;
+  const si = chatState.subIdx;
+  subFlags[di][si] = 'nodata';
+  subScores[di][si] = -1;
+  updateSubScore(di, si, -1);
+  if (addUserMessage) addMessage('user', t('confirmNoData'));
+  addMessage('bot', lang === 'de'
+    ? `Diese Unterdimension wird aus der Berechnung ausgeschlossen. Weiter zur nächsten.`
+    : `This sub-dimension will not be scored and is excluded from the calculation. Moving on.`);
+  chatState.phase = 'questioning';
+  chatState.subIdx++;
+  setTimeout(() => startSubDimension(), 700);
+}
+
+function showInsufficientOptions() {
+  chatState.phase = 'confirm';
+  const di = chatState.dimIdx;
+  const si = chatState.subIdx;
+  subFlags[di][si] = 'insufficient';
+  updateSubScore(di, si, null);
+  const html = `
+    <button class="confirm-btn" onclick="provideMoreData()">${lang === 'de' ? 'Ich liefere mehr Daten' : 'I will provide more data'}</button>
+    <button class="confirm-btn danger" onclick="setNoData()">${t('confirmNoData')}</button>`;
+  addMessage('bot', lang === 'de'
+    ? 'Möchten Sie weitere Daten liefern oder diese Unterdimension ohne Score überspringen?'
+    : 'Would you like to provide more data, or skip this sub-dimension without a score?', html);
+}
+
+function provideMoreData() {
+  chatState.phase = 'questioning';
+  addMessage('bot', lang === 'de'
+    ? 'Bitte liefern Sie die fehlenden Informationen.'
+    : 'Please provide the missing information.');
+}
+
+function showManualControl() {
+  chatState.phase = 'manual';
+  const chips = Array.from({length:6},(_,i)=>`<button class="score-chip" onclick="setManualScore(${i})">${i}</button>`).join('');
+  const html = `<div class="manual-score-row">${chips}</div>`;
+  addMessage('bot', lang === 'de'
+    ? `Bitte setzen Sie den Score manuell. Wählen Sie Level 0–5:`
+    : `Please set the score manually. Choose Level 0–5:`, html);
+}
+
+function setManualScore(score) {
+  const di = chatState.dimIdx;
+  const si = chatState.subIdx;
+  subFlags[di][si] = null;
+  updateSubScore(di, si, score);
+  addMessage('user', `Level ${score} (${t('manualSet')})`);
+  addMessage('bot', lang === 'de'
+    ? `Level ${score} manuell gesetzt. Weiter.`
+    : `Level ${score} set manually. Moving on.`);
+  chatState.phase = 'questioning';
+  chatState.subIdx++;
+  setTimeout(() => startSubDimension(), 700);
+}
+
+function finishDimension() {
+  chatState.phase = 'done';
+  updateProgressDot();
+  const di = chatState.dimIdx;
+  const scores = subScores[di].filter(s => s !== null && s >= 0);
+  const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : 'N/A';
+  addMessage('bot', lang === 'de'
+    ? `Alle Unterdimensionen bewertet! Durchschnittlicher Dimensionswert: **${avg}**\n\nSchließen Sie diesen Chat und öffnen Sie die nächste Dimension um dort fortzufahren.`
+    : `All sub-dimensions assessed! Average dimension score: **${avg}**\n\nClose this chat and open the next dimension to continue there.`);
+  document.getElementById('chatInput').disabled = true;
+  document.getElementById('chatSendBtn').disabled = true;
+}
+
+function handleInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = '38px';
+  el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+buildSliders();
+buildDimBlocks();
+</script>
+</body>
+</html>
